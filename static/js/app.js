@@ -1,50 +1,22 @@
 /**
  * GPU Hot - Main Application
  * Initializes the application when the DOM is ready
+ * GPU Hot - 主应用程序
+ * 在DOM准备好时初始化应用程序
  */
 
-// Application initialization
+// 应用初始化
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('GPU Hot application initialized');
+    console.log('GPU Hot 应用已初始化');
     
-    // All functionality is loaded from other modules:
-    // - charts.js: Chart configurations and updates
-    // - gpu-cards.js: GPU card rendering and updates
-    // - ui.js: UI interactions and navigation
-    // - socket-handlers.js: Real-time data updates via Socket.IO
+    // 所有功能均从其他模块加载：
+    // - charts.js: 图表配置和更新
+    // - gpu-cards.js: GPU卡片渲染和更新
+    // - ui.js: 用户界面交互和导航
+    // - socket-handlers.js: 通过Socket.IO进行实时数据更新
     
-    // The socket connection is established automatically when socket-handlers.js loads
+    // 当socket-handlers.js加载时，套接字连接会自动建立
     
-    // Check for version updates
+    // 检查版本更新
     checkVersion();
 });
-
-/**
- * Check current version and update availability
- */
-async function checkVersion() {
-    try {
-        const response = await fetch('/api/version');
-        const data = await response.json();
-        
-        const versionCurrent = document.getElementById('version-current');
-        const updateBadge = document.getElementById('update-badge');
-        const updateLink = document.getElementById('update-link');
-        
-        if (versionCurrent) {
-            versionCurrent.textContent = `v${data.current}`;
-        }
-        
-        if (data.update_available && data.latest) {
-            updateBadge.style.display = 'inline-block';
-            updateLink.href = data.release_url || 'https://github.com/psalias2006/gpu-hot/releases/latest';
-            updateLink.title = `Update to v${data.latest}`;
-        }
-    } catch (error) {
-        console.debug('Failed to check version:', error);
-        const versionCurrent = document.getElementById('version-current');
-        if (versionCurrent) {
-            versionCurrent.textContent = 'Unknown';
-        }
-    }
-}
