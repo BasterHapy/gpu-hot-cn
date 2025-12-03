@@ -1,5 +1,4 @@
-"""Async WebSocket handlers for real-time monitoring"""
-# 异步 WebSocket 处理程序，用于实时监测
+"""异步 WebSocket 处理程序，用于实时监测"""
 
 # 导入 异步IO, 系统监测库, 日志记录和 JSON 库
 import asyncio

@@ -1,4 +1,4 @@
-"""GPU metrics collector using NVML"""
+"""使用 NVML 收集 GPU 指标"""
 
 import time
 import pynvml
@@ -7,14 +7,14 @@ from .utils import safe_get, decode_bytes, to_mib, to_watts
 
 
 class MetricsCollector:
-    """Collect all available GPU metrics via NVML"""
+    """通过 NVML 收集所有可用的 GPU 指标"""
     
     def __init__(self):
         self.previous_samples = {}
         self.last_sample_time = {}
     
     def collect_all(self, handle, gpu_id):
-        """Collect all available metrics for a GPU"""
+        """收集单个 GPU 的所有可用指标"""
         data = {
             'index': gpu_id,
             'timestamp': datetime.now().isoformat()
@@ -37,7 +37,7 @@ class MetricsCollector:
         return data
     
     def _add_basic_info(self, handle, data):
-        """Basic GPU information"""
+        """基础GPU信息"""
         if name := safe_get(pynvml.nvmlDeviceGetName, handle):
             data['name'] = decode_bytes(name)
         
@@ -50,20 +50,20 @@ class MetricsCollector:
         if vbios := safe_get(pynvml.nvmlDeviceGetVbiosVersion, handle):
             data['vbios_version'] = decode_bytes(vbios)
         
-        # Brand and architecture with smart detection
+        # 品牌和架构，智能检测
         self._detect_brand(handle, data)
         self._detect_architecture(handle, data)
         
-        # CUDA capability
+        # CUDA 计算能力
         if cap := safe_get(pynvml.nvmlDeviceGetCudaComputeCapability, handle):
             data['cuda_compute_capability'] = f"{cap[0]}.{cap[1]}"
         
-        # Serial number
+        # 序列号
         if serial := safe_get(pynvml.nvmlDeviceGetSerial, handle):
             data['serial'] = decode_bytes(serial)
     
     def _detect_brand(self, handle, data):
-        """Detect GPU brand from NVML"""
+        """从 NVML 检测 GPU 品牌"""
         BRAND_MAP = {
             1: 'GeForce', 2: 'Quadro', 3: 'Tesla',
             4: 'NVS', 5: 'GRID', 6: 'Titan',
@@ -74,22 +74,22 @@ class MetricsCollector:
             data['brand'] = BRAND_MAP.get(brand, f'Brand {brand}')
     
     def _detect_architecture(self, handle, data):
-        """Detect GPU architecture with fallback to name-based detection"""
+        """检测 GPU 架构，回退到基于名称的检测"""
         ARCH_MAP = {
             0: 'Kepler', 1: 'Maxwell', 2: 'Pascal', 3: 'Volta',
             4: 'Turing', 5: 'Ampere', 6: 'Ada Lovelace', 7: 'Hopper',
             8: 'Ada Lovelace', 9: 'Ada Lovelace'  # Driver variations
         }
         
-        # Try NVML first
+        # 尝试首先使用 NVML
         if arch := safe_get(pynvml.nvmlDeviceGetArchitecture, handle):
             data['architecture'] = ARCH_MAP.get(arch, self._detect_arch_from_name(data.get('name', '')))
-        # Fallback to name-based detection
+        # 回退到基于名称的检测
         elif 'name' in data:
             data['architecture'] = self._detect_arch_from_name(data['name'])
     
     def _detect_arch_from_name(self, gpu_name):
-        """Detect architecture from GPU model name"""
+        """从 GPU 型号名称检测架构"""
         name = gpu_name.upper()
         
         arch_patterns = [
@@ -110,8 +110,8 @@ class MetricsCollector:
         return 'Unknown'
     
     def _add_performance(self, handle, data):
-        """Performance metrics"""
-        # Utilization
+        """先进性能指标"""
+        # 利用率
         if util := safe_get(pynvml.nvmlDeviceGetUtilizationRates, handle):
             data['utilization'] = float(util.gpu)
             data['memory_utilization'] = float(util.memory)
@@ -120,20 +120,20 @@ class MetricsCollector:
         if pstate := safe_get(pynvml.nvmlDeviceGetPerformanceState, handle):
             data['performance_state'] = f'P{pstate}'
         
-        # Compute mode
+        # 计算模式
         if mode := safe_get(pynvml.nvmlDeviceGetComputeMode, handle):
             modes = {0: 'Default', 1: 'Exclusive Thread', 
                     2: 'Prohibited', 3: 'Exclusive Process'}
             data['compute_mode'] = modes.get(mode, 'Unknown')
     
     def _add_memory(self, handle, data, gpu_id, current_time):
-        """Memory metrics"""
+        """内存指标"""
         if mem := safe_get(pynvml.nvmlDeviceGetMemoryInfo, handle):
             data['memory_used'] = to_mib(mem.used)
             data['memory_total'] = to_mib(mem.total)
             data['memory_free'] = to_mib(mem.free)
             
-            # Calculate change rate
+            # 计算变化率
             if gpu_id in self.previous_samples:
                 prev = self.previous_samples[gpu_id]
                 if 'memory_used' in prev:
@@ -142,19 +142,20 @@ class MetricsCollector:
                         delta = data['memory_used'] - prev['memory_used']
                         data['memory_change_rate'] = float(delta / dt)
         
-        # BAR1 memory
+        # BAR1 内存
         if bar1 := safe_get(pynvml.nvmlDeviceGetBAR1MemoryInfo, handle):
             data['bar1_memory_used'] = to_mib(bar1.bar1Used)
             data['bar1_memory_total'] = to_mib(bar1.bar1Total)
     
     def _add_power_thermal(self, handle, data):
-        """Power and thermal metrics"""
+        """功率和温度指标"""
         self._add_temperature(handle, data)
         self._add_power(handle, data)
         self._add_fan_speeds(handle, data)
         self._add_throttling(handle, data)
     
     def _add_temperature(self, handle, data):
+        """温度指标"""
         if temp := safe_get(pynvml.nvmlDeviceGetTemperature, handle, pynvml.NVML_TEMPERATURE_GPU):
             data['temperature'] = float(temp)
         
@@ -163,6 +164,7 @@ class MetricsCollector:
                 data['temperature_memory'] = float(temp_mem)
     
     def _add_power(self, handle, data):
+        """功率指标"""
         if power := safe_get(pynvml.nvmlDeviceGetPowerUsage, handle):
             data['power_draw'] = to_watts(power)
         
@@ -179,6 +181,7 @@ class MetricsCollector:
             data['energy_consumption_wh'] = float(energy) / 3600000.0
     
     def _add_fan_speeds(self, handle, data):
+        """风扇速度指标"""
         if fan := safe_get(pynvml.nvmlDeviceGetFanSpeed, handle):
             data['fan_speed'] = float(fan)
         
@@ -192,21 +195,22 @@ class MetricsCollector:
                     data['fan_speeds'] = fans
     
     def _add_throttling(self, handle, data):
+        """时钟节流指标"""
         if throttle := safe_get(pynvml.nvmlDeviceGetCurrentClocksThrottleReasons, handle):
             throttle_map = [
-                (pynvml.nvmlClocksThrottleReasonGpuIdle, 'GPU Idle'),
-                (pynvml.nvmlClocksThrottleReasonApplicationsClocksSetting, 'App Settings'),
-                (pynvml.nvmlClocksThrottleReasonSwPowerCap, 'SW Power Cap'),
-                (pynvml.nvmlClocksThrottleReasonHwSlowdown, 'HW Slowdown'),
-                (pynvml.nvmlClocksThrottleReasonSwThermalSlowdown, 'SW Thermal'),
-                (pynvml.nvmlClocksThrottleReasonHwThermalSlowdown, 'HW Thermal'),
-                (pynvml.nvmlClocksThrottleReasonHwPowerBrakeSlowdown, 'Power Brake'),
+                (pynvml.nvmlClocksThrottleReasonGpuIdle, 'GPU 空闲'),
+                (pynvml.nvmlClocksThrottleReasonApplicationsClocksSetting, '应用时钟设置'),
+                (pynvml.nvmlClocksThrottleReasonSwPowerCap, '软件功率限制'),
+                (pynvml.nvmlClocksThrottleReasonHwSlowdown, '硬件降速'),
+                (pynvml.nvmlClocksThrottleReasonSwThermalSlowdown, '软件热降速'),
+                (pynvml.nvmlClocksThrottleReasonHwThermalSlowdown, '硬件热降速'),
+                (pynvml.nvmlClocksThrottleReasonHwPowerBrakeSlowdown, '功率刹车降速'),
             ]
             reasons = [label for flag, label in throttle_map if throttle & flag]
-            data['throttle_reasons'] = ', '.join(reasons) if reasons else 'None'
+            data['throttle_reasons'] = ', '.join(reasons) if reasons else '无'
     
     def _add_clocks(self, handle, data):
-        """Clock speed metrics"""
+        """时钟速度指标"""
         clock_types = [
             ('clock_graphics', pynvml.NVML_CLOCK_GRAPHICS),
             ('clock_sm', pynvml.NVML_CLOCK_SM),
@@ -215,23 +219,23 @@ class MetricsCollector:
         ]
         
         for key, clock_type in clock_types:
-            # Current clocks
+            # 当前时钟
             if clock := safe_get(pynvml.nvmlDeviceGetClockInfo, handle, clock_type):
                 data[key] = float(clock)
             
-            # Max clocks
+            # 最大时钟
             if max_clock := safe_get(pynvml.nvmlDeviceGetMaxClockInfo, handle, clock_type):
                 data[f'{key}_max'] = float(max_clock)
             
-            # Application clocks (target clocks set by user/driver)
+            # 应用时钟（用户/驱动设置的目标时钟）
             if app_clock := safe_get(pynvml.nvmlDeviceGetApplicationsClock, handle, clock_type):
                 data[f'{key}_app'] = float(app_clock)
             
-            # Default application clocks
+            # 默认应用时钟
             if default_clock := safe_get(pynvml.nvmlDeviceGetDefaultApplicationsClock, handle, clock_type):
                 data[f'{key}_default'] = float(default_clock)
         
-        # Supported memory clocks (list of all available clock speeds)
+        # 支持的内存时钟（所有可用时钟速度的列表）
         try:
             if mem_clocks := safe_get(pynvml.nvmlDeviceGetSupportedMemoryClocks, handle):
                 if mem_clocks and len(mem_clocks) > 0:
@@ -240,8 +244,8 @@ class MetricsCollector:
             pass
     
     def _add_connectivity(self, handle, data):
-        """PCIe and interconnect metrics"""
-        # PCIe
+        """PCIe 连接指标"""
+        
         pcie_metrics = [
             ('pcie_gen', pynvml.nvmlDeviceGetCurrPcieLinkGeneration),
             ('pcie_gen_max', pynvml.nvmlDeviceGetMaxPcieLinkGeneration),
@@ -253,7 +257,7 @@ class MetricsCollector:
             if value := safe_get(func, handle):
                 data[key] = str(value)
         
-        # PCIe throughput
+        # PCIe 吞吐量
         if tx := safe_get(pynvml.nvmlDeviceGetPcieThroughput, handle,
                          pynvml.NVML_PCIE_UTIL_TX_BYTES):
             data['pcie_tx_throughput'] = float(tx)
@@ -262,13 +266,13 @@ class MetricsCollector:
                          pynvml.NVML_PCIE_UTIL_RX_BYTES):
             data['pcie_rx_throughput'] = float(rx)
         
-        # PCI info
+        # PCI 信息
         if pci := safe_get(pynvml.nvmlDeviceGetPciInfo, handle):
             data['pci_bus_id'] = decode_bytes(pci.busId)
     
     def _add_media_engines(self, handle, data):
-        """Encoder/decoder metrics"""
-        # Encoder
+        """编码器/解码器指标"""
+        # 编码器
         if enc := safe_get(pynvml.nvmlDeviceGetEncoderUtilization, handle):
             if isinstance(enc, tuple) and len(enc) >= 2:
                 data['encoder_utilization'] = float(enc[0])
@@ -281,7 +285,7 @@ class MetricsCollector:
         except:
             pass
         
-        # Decoder
+        # 解码器
         if dec := safe_get(pynvml.nvmlDeviceGetDecoderUtilization, handle):
             if isinstance(dec, tuple) and len(dec) >= 2:
                 data['decoder_utilization'] = float(dec[0])
@@ -293,7 +297,7 @@ class MetricsCollector:
             pass
     
     def _add_health_status(self, handle, data):
-        """ECC and health metrics"""
+        """ECC 和健康指标"""
         try:
             if ecc := pynvml.nvmlDeviceGetEccMode(handle):
                 if ecc[0]:
@@ -316,7 +320,7 @@ class MetricsCollector:
             pass
     
     def _add_advanced(self, handle, data):
-        """Advanced features"""
+        """高级指标"""
         if mode := safe_get(pynvml.nvmlDeviceGetPersistenceMode, handle):
             data['persistence_mode'] = 'Enabled' if mode else 'Disabled'
         
@@ -333,6 +337,7 @@ class MetricsCollector:
         self._add_nvlink(handle, data)
     
     def _add_mig_mode(self, handle, data):
+        """MIG 模式指标"""
         if hasattr(pynvml, 'nvmlDeviceGetMigMode'):
             if mig := safe_get(pynvml.nvmlDeviceGetMigMode, handle):
                 if isinstance(mig, tuple) and len(mig) >= 2:
@@ -340,6 +345,7 @@ class MetricsCollector:
                     data['mig_mode_pending'] = 'Enabled' if mig[1] else 'Disabled'
     
     def _add_nvlink(self, handle, data):
+        """NVLink 指标"""
         if hasattr(pynvml, 'nvmlDeviceGetNvLinkState'):
             nvlinks = []
             active_count = 0

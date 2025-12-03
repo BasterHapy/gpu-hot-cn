@@ -1,6 +1,7 @@
 """
-GPU Metrics Collection
-Organized collection of GPU metrics from NVML
+GPU 指标收集
+有组织地收集来自 NVML 的 GPU 指标
+
 """
 
 from .collector import MetricsCollector

@@ -1,9 +1,11 @@
-"""Async GPU monitoring using NVML"""
+"""异步 GPU 监测，使用 NVML"""
+
 
 import asyncio
 import pynvml
 import psutil
 import logging
+
 from .metrics import MetricsCollector
 from .nvidia_smi_fallback import parse_nvidia_smi
 from .config import NVIDIA_SMI
@@ -12,13 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 class GPUMonitor:
-    """Monitor NVIDIA GPUs using NVML"""
+    """异步 GPU 监测，使用 NVML"""
 
     def __init__(self):
         self.running = False
         self.gpu_data = {}
         self.collector = MetricsCollector()
-        self.use_smi = {}  # Track which GPUs use nvidia-smi (decided at boot)
+        self.use_smi = {}  # 跟踪哪些 GPU 使用 nvidia-smi（在启动时决定）
 
         try:
             pynvml.nvmlInit()
@@ -28,7 +30,7 @@ class GPUMonitor:
                 version = version.decode('utf-8')
             logger.info(f"NVML initialized - Driver: {version}")
 
-            # Detect which GPUs need nvidia-smi (once at boot)
+            # 检测哪些 GPU 需要 nvidia-smi（启动时调用一次）
             self._detect_smi_gpus()
 
         except Exception as e:
@@ -36,7 +38,7 @@ class GPUMonitor:
             self.initialized = False
 
     def _detect_smi_gpus(self):
-        """Detect which GPUs need nvidia-smi fallback (called once at boot)"""
+        """检测哪些 GPU 需要 nvidia-smi（启动时调用一次）"""
         try:
             device_count = pynvml.nvmlDeviceGetCount()
             logger.info(f"Detected {device_count} GPU(s)")
@@ -47,7 +49,7 @@ class GPUMonitor:
                     self.use_smi[str(i)] = True
                 return
 
-            # Auto-detect per GPU
+            # 自动检测每个 GPU
             for i in range(device_count):
                 gpu_id = str(i)
                 try:
@@ -68,7 +70,7 @@ class GPUMonitor:
                     logger.error(f"GPU {i}: NVML detection failed - {e}")
                     logger.warning(f"GPU {i}: Falling back to nvidia-smi")
 
-            # Summary
+            # 总结检测结果
             nvml_count = sum(1 for use_smi in self.use_smi.values() if not use_smi)
             smi_count = sum(1 for use_smi in self.use_smi.values() if use_smi)
             if smi_count > 0:
@@ -80,7 +82,7 @@ class GPUMonitor:
             logger.error(f"Failed to detect GPUs: {e}")
 
     async def get_gpu_data(self):
-        """Async collect metrics from all detected GPUs"""
+        """异步收集所有检测到的 GPU 的指标"""
         if not self.initialized:
             logger.error("Cannot get GPU data - NVML not initialized")
             return {}
@@ -89,35 +91,35 @@ class GPUMonitor:
             device_count = pynvml.nvmlDeviceGetCount()
             gpu_data = {}
 
-            # Get nvidia-smi data once if any GPU needs it
+            # 如果有任何 GPU 需要 nvidia-smi，则获取一次 nvidia-smi 数据
             smi_data = None
             if any(self.use_smi.values()):
                 try:
-                    # Run nvidia-smi in thread pool to avoid blocking
+                    # 在线程池中运行 nvidia-smi 以避免阻塞
                     smi_data = await asyncio.get_event_loop().run_in_executor(
                         None, parse_nvidia_smi
                     )
                 except Exception as e:
                     logger.error(f"nvidia-smi failed: {e}")
 
-            # Collect GPU data concurrently
+            # 并发收集 GPU 数据
             tasks = []
             for i in range(device_count):
                 gpu_id = str(i)
                 if self.use_smi.get(gpu_id, False):
-                    # Use nvidia-smi data
+                    # 使用 nvidia-smi 数据
                     if smi_data and gpu_id in smi_data:
                         gpu_data[gpu_id] = smi_data[gpu_id]
                     else:
                         logger.warning(f"GPU {i}: No data from nvidia-smi")
                 else:
-                    # Use NVML - run in thread pool to avoid blocking
+                    # 使用 NVML - 在线程池中运行以避免阻塞
                     task = asyncio.get_event_loop().run_in_executor(
                         None, self._collect_single_gpu, i
                     )
                     tasks.append((gpu_id, task))
 
-            # Wait for all NVML tasks to complete
+            # 等待所有 NVML 任务完成
             if tasks:
                 results = await asyncio.gather(*[task for _, task in tasks], return_exceptions=True)
                 for (gpu_id, _), result in zip(tasks, results):
@@ -137,7 +139,7 @@ class GPUMonitor:
             return {}
 
     def _collect_single_gpu(self, gpu_index):
-        """Collect data for a single GPU (runs in thread pool)"""
+        """收集单个 GPU 的数据（在线程池中运行）"""
         try:
             handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
             return self.collector.collect_all(handle, str(gpu_index))
@@ -146,12 +148,12 @@ class GPUMonitor:
             return {}
 
     async def get_processes(self):
-        """Async get GPU process information"""
+        """异步获取 GPU 进程信息"""
         if not self.initialized:
             return []
 
         try:
-            # Run process collection in thread pool
+            # 在线程池中运行进程收集
             return await asyncio.get_event_loop().run_in_executor(
                 None, self._get_processes_sync
             )
@@ -160,7 +162,7 @@ class GPUMonitor:
             return []
 
     def _get_processes_sync(self):
-        """Synchronous process collection (runs in thread pool)"""
+        """同步进程收集（在线程池中运行）"""
         try:
             device_count = pynvml.nvmlDeviceGetCount()
             all_processes = []
@@ -206,11 +208,11 @@ class GPUMonitor:
             return []
 
     def _get_process_name(self, pid):
-        """Extract readable process name from PID with improved logic"""
+        """从 PID 提取可读的进程名称，改进逻辑"""
         try:
             p = psutil.Process(pid)
 
-            # First try to get the process name
+            # 首先尝试获取进程名称
             try:
                 process_name = p.name()
                 if process_name and process_name not in ['python', 'python3', 'sh', 'bash']:
@@ -218,38 +220,38 @@ class GPUMonitor:
             except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
                 pass
 
-            # Try to get command line for better name extraction
+            # 尝试获取命令行以更好地提取名称
             try:
                 cmdline = p.cmdline()
                 if cmdline:
-                    # Look for the actual executable or script name
+                    # 查找实际的可执行文件或脚本名称
                     for i, arg in enumerate(cmdline):
                         if not arg or arg.startswith('-'):
                             continue
 
-                        # Skip common interpreters and shells
+                        # 跳过常见的解释器和 shell
                         if arg in ['python', 'python3', 'node', 'java', 'sh', 'bash', 'zsh']:
                             continue
 
-                        # Extract filename from path
+                        # 从路径中提取文件名
                         filename = arg.split('/')[-1].split('\\')[-1]
 
-                        # Skip if it's still a generic name
+                        # 如果仍然是通用名称，则跳过
                         if filename in ['python', 'python3', 'node', 'java', 'sh', 'bash']:
                             continue
 
-                        # Found a meaningful name
+                        # 找到有意义的名称
                         if filename:
                             return filename
 
-                    # Fallback to first argument if nothing else worked
+                    # 如果以上都不行，回退到第一个参数
                     if cmdline[0]:
                         return cmdline[0].split('/')[-1].split('\\')[-1]
 
             except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
                 pass
 
-            # Final fallback
+            # 最终回退到 PID
             return f'PID:{pid}'
 
         except (psutil.NoSuchProcess, psutil.ZombieProcess):
@@ -259,7 +261,7 @@ class GPUMonitor:
             return f'PID:{pid}'
 
     async def shutdown(self):
-        """Async shutdown"""
+        """异步关闭"""
         if self.initialized:
             try:
                 pynvml.nvmlShutdown()

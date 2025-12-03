@@ -1,6 +1,6 @@
 """
-Simple nvidia-smi fallback parser
-Based on the original working implementation
+简单的 nvidia-smi 回退解析器
+基于原始的工作实现
 """
 
 import subprocess
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_nvidia_smi():
-    """Parse nvidia-smi output and extract comprehensive GPU information"""
+    """解析 nvidia-smi 输出并提取全面的 GPU 信息"""
     try:
         result = subprocess.run([
             'nvidia-smi', 
@@ -92,7 +92,7 @@ def parse_nvidia_smi():
 
 
 def parse_nvidia_smi_fallback():
-    """Fallback parser with minimal, widely-supported fields"""
+    """回退解析器，使用最小且广泛支持的字段"""
     try:
         logger.info("Using basic nvidia-smi query (minimal fields)")
         result = subprocess.run([

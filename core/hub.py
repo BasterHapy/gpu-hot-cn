@@ -1,4 +1,4 @@
-"""Async Hub mode - aggregates data from multiple nodes"""
+"""异步集群模式 - 聚合来自多个节点的数据"""
 
 import asyncio
 import logging
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Hub:
-    """Aggregates GPU data from multiple nodes"""
+    """聚合来自多个节点的数据"""
     
     def __init__(self, node_urls):
         self.node_urls = node_urls
@@ -20,7 +20,7 @@ class Hub:
         self.running = False
         self._connection_started = False
         
-        # Initialize nodes as offline
+        # 初始化节点为离线状态
         for url in node_urls:
             self.nodes[url] = {
                 'url': url,
@@ -32,16 +32,16 @@ class Hub:
             self.url_to_node[url] = url
     
     async def _connect_all_nodes(self):
-        """Connect to all nodes in background with retries"""
-        # Wait a bit for Docker network to be ready
+        """在后台连接所有节点并重试"""
+        # 等待一段时间以确保 Docker 网络准备就绪
         await asyncio.sleep(2)
         
-        # Connect to all nodes concurrently
+        # 并发连接所有节点
         tasks = [self._connect_node_with_retry(url) for url in self.node_urls]
         await asyncio.gather(*tasks, return_exceptions=True)
     
     async def _connect_node_with_retry(self, url):
-        """Connect to a node with retry logic"""
+        """连接节点并重试"""
         max_retries = 5
         retry_delay = 2
         
@@ -57,10 +57,10 @@ class Hub:
                     logger.error(f'Failed to connect to node {url} after {max_retries} attempts: {str(e)}')
     
     async def _connect_node(self, url):
-        """Connect to a node using native WebSocket"""
+        """使用原生 WebSocket 连接到节点"""
         while self.running:
             try:
-                # Convert HTTP URL to WebSocket URL
+                # 将 HTTP URL 转换为 WebSocket URL
                 ws_url = url.replace('http://', 'ws://').replace('https://', 'wss://') + '/socket.io/'
                 
                 logger.info(f'Connecting to node WebSocket: {ws_url}')
@@ -68,7 +68,7 @@ class Hub:
                 async with websockets.connect(ws_url) as websocket:
                     logger.info(f'Connected to node: {url}')
                     
-                    # Mark node as online
+                    # 标记节点为在线
                     node_name = self.url_to_node.get(url, url)
                     self.nodes[node_name] = {
                         'url': url,
@@ -78,18 +78,18 @@ class Hub:
                         'last_update': datetime.now().isoformat()
                     }
                     
-                    # Listen for data from the node
+                    # 监听来自节点的数据
                     async for message in websocket:
                         try:
                             data = json.loads(message)
                             
-                            # Extract node name from data or use URL as fallback
+                            # 从数据中提取节点名称，或使用 URL 作为回退
                             node_name = data.get('node_name', url)
                             
-                            # Update URL to node mapping
+                            # 更新 URL 到节点名称的映射
                             self.url_to_node[url] = node_name
                             
-                            # Update node entry with received data
+                            # 使用接收到的数据更新节点条目
                             self.nodes[node_name] = {
                                 'url': url,
                                 'websocket': websocket,
@@ -105,25 +105,25 @@ class Hub:
                             
             except websockets.exceptions.ConnectionClosed:
                 logger.warning(f'WebSocket connection closed for node: {url}')
-                # Mark node as offline
+                # 标记节点为离线
                 node_name = self.url_to_node.get(url, url)
                 if node_name in self.nodes:
                     self.nodes[node_name]['status'] = 'offline'
                     logger.info(f'Marked node {node_name} as offline')
             except Exception as e:
                 logger.error(f'Failed to connect to node {url}: {e}')
-                # Mark node as offline
+                # 标记节点为离线
                 node_name = self.url_to_node.get(url, url)
                 if node_name in self.nodes:
                     self.nodes[node_name]['status'] = 'offline'
                     logger.info(f'Marked node {node_name} as offline')
             
-            # Wait before retrying connection
+            # 在重试连接之前等待一段时间
             if self.running:
                 await asyncio.sleep(5)
     
     async def get_cluster_data(self):
-        """Get aggregated data from all nodes"""
+        """获取所有节点的聚合数据"""
         nodes = {}
         total_gpus = 0
         online_nodes = 0
@@ -159,7 +159,7 @@ class Hub:
         }
     
     async def shutdown(self):
-        """Disconnect from all nodes"""
+        """断开所有节点的连接"""
         self.running = False
         for node_info in self.nodes.values():
             if node_info.get('websocket'):

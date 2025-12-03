@@ -1,5 +1,4 @@
 """
-Configuration settings for GPU Hot
 为GPU Hot 的配置设置
 """
 
