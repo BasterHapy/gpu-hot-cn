@@ -88,69 +88,6 @@ async def api_gpu_data():
     # 如果没有数据则返回空
     return {"gpus": {}, "timestamp": "no_data"}
 
-
-def compare_versions(current, latest):
-    """比较语义版本。如果最新版本 > 当前版本则返回True"""
-
-    # 拆分版本号为整数列表并比较
-    try:
-        current_parts = [int(x) for x in current.split('.')]
-        latest_parts = [int(x) for x in latest.split('.')]
-        
-        # 补齐版本号长度
-        max_len = max(len(current_parts), len(latest_parts))
-        current_parts += [0] * (max_len - len(current_parts))
-        latest_parts += [0] * (max_len - len(latest_parts))
-        
-        # 比较每个部分
-        for c, l in zip(current_parts, latest_parts):
-            if l > c:
-                return True
-            elif l < c:
-                return False
-        
-        return False  # Versions are equal
-    except (ValueError, AttributeError):
-        return False
-
-# 定义版本检查API端点 -> 检查GitHub上的最新版本
-@app.get("/api/version")
-async def api_version():
-    """获取当前版本并检查GitHub上的更新"""
-    current_version = __version__
-    
-    try:
-        # 检查GitHub上的最新发布版本
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://api.github.com/repos/psalias2006/gpu-hot/releases/latest",
-                timeout=aiohttp.ClientTimeout(total=5)
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    latest_version = data.get("tag_name", "").lstrip("v")
-                    
-                    # 仅当最新版本 > 当前版本时显示更新
-                    update_available = compare_versions(current_version, latest_version) if latest_version else False
-                    
-                    return JSONResponse({
-                        "current": current_version,
-                        "latest": latest_version,
-                        "update_available": update_available,
-                        "release_url": data.get("html_url", "")
-                    })
-    except Exception as e:
-        logger.debug(f"Failed to check for updates: {e}")
-    
-    # GitHub检查失败返回当前版本
-    return JSONResponse({
-        "current": current_version,
-        "latest": None,
-        "update_available": False,
-        "release_url": None
-    })
-
-
 if __name__ == '__main__':
     # 使用Uvicorn运行FastAPI应用
     import uvicorn
