@@ -1,8 +1,10 @@
 /**
  * GPU Card creation and update functions
+ * GPU卡片创建和更新函数
  */
 
 // Create overview GPU card (compact view)
+// 创建概览 GPU 卡片（紧凑视图）
 function createOverviewCard(gpuId, gpuInfo) {
     const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
     const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
@@ -19,26 +21,26 @@ function createOverviewCard(gpuId, gpuInfo) {
                 </div>
                 <div class="gpu-status-badge">
                     <span class="status-dot"></span>
-                    <span class="status-text">ONLINE</span>
+                    <span class="status-text">在线</span>
                 </div>
             </div>
 
             <div class="overview-metrics">
                 <div class="overview-metric">
                     <div class="overview-metric-value" id="overview-util-${gpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
-                    <div class="overview-metric-label">GPU Usage</div>
+                    <div class="overview-metric-label">GPU 使用率</div>
                 </div>
                 <div class="overview-metric">
                     <div class="overview-metric-value" id="overview-temp-${gpuId}">${getMetricValue(gpuInfo, 'temperature', 0)}°C</div>
-                    <div class="overview-metric-label">Temperature</div>
+                    <div class="overview-metric-label">温度</div>
                 </div>
                 <div class="overview-metric">
                     <div class="overview-metric-value" id="overview-mem-${gpuId}">${Math.round(memPercent)}%</div>
-                    <div class="overview-metric-label">Memory</div>
+                    <div class="overview-metric-label">内存</div>
                 </div>
                 <div class="overview-metric">
                     <div class="overview-metric-value" id="overview-power-${gpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
-                    <div class="overview-metric-label">Power Draw</div>
+                    <div class="overview-metric-label">功率消耗</div>
                 </div>
             </div>
 
@@ -52,12 +54,14 @@ function createOverviewCard(gpuId, gpuInfo) {
 }
 
 // Update overview card (throttled for DOM updates, always updates charts)
+// 更新概览卡片（节流以减少 DOM 更新，但始终更新图表）
 function updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
     const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
     const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
     const memPercent = (memory_used / memory_total) * 100;
 
     // Only update DOM text when throttle allows
+    // 仅在节流允许时更新 DOM 文本
     if (shouldUpdateDOM) {
         const utilEl = document.getElementById(`overview-util-${gpuId}`);
         const tempEl = document.getElementById(`overview-temp-${gpuId}`);
@@ -71,15 +75,17 @@ function updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
     }
 
     // ALWAYS update chart data for the mini chart (smooth animations)
+    // 始终更新迷你图表数据（平滑动画）
     updateChart(gpuId, 'utilization', Number(getMetricValue(gpuInfo, 'utilization', 0)));
 
     // Update mini chart
+    // 更新迷你图表
     if (charts[gpuId] && charts[gpuId].overviewMini) {
         charts[gpuId].overviewMini.update('none');
     }
 }
 
-// Create detailed GPU card HTML (for individual tabs)
+// 创建详细的 GPU 卡片 HTML（用于单独的标签）
 function createGPUCard(gpuId, gpuInfo) {
     const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
     const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
@@ -96,7 +102,7 @@ function createGPUCard(gpuId, gpuInfo) {
                     <div class="gpu-name">${gpuInfo.name}</div>
                     <div class="gpu-specs">
                         <span class="spec-item">
-                            <span id="fan-${gpuId}">${gpuInfo.fan_speed}%</span> Fan
+                            <span id="fan-${gpuId}">${gpuInfo.fan_speed}%</span> 风扇
                         </span>
                         <span class="spec-item">
                             <span id="pstate-header-${gpuId}">${gpuInfo.performance_state || 'N/A'}</span>
@@ -114,7 +120,7 @@ function createGPUCard(gpuId, gpuInfo) {
                 </div>
                 <div class="gpu-status-badge">
                     <span class="status-dot"></span>
-                    <span class="status-text">ONLINE</span>
+                    <span class="status-text">在线</span>
                 </div>
             </div>
 
@@ -122,7 +128,7 @@ function createGPUCard(gpuId, gpuInfo) {
                 <div class="metric-card metric-card-featured">
                     <canvas class="util-background-chart" id="util-bg-chart-${gpuId}"></canvas>
                     <div class="metric-header">
-                        <span class="metric-label">GPU Utilization</span>
+                        <span class="metric-label">GPU 利用率</span>
                     </div>
                     <div class="circular-progress-container">
                         <svg class="circular-progress" viewBox="0 0 120 120">
@@ -146,23 +152,23 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Temperature</span>
+                        <span class="metric-label">温度</span>
                     </div>
                     <div class="temp-display">
                         <div class="metric-value-large" id="temp-${gpuId}">${gpuInfo.temperature}°C</div>
                         <div class="temp-gauge"></div>
                         <div class="temp-status" id="temp-status-${gpuId}">
-                            ${gpuInfo.temperature < 60 ? 'Cool' : gpuInfo.temperature < 75 ? 'Normal' : 'Warm'}
+                            ${gpuInfo.temperature < 60 ? '冷' : gpuInfo.temperature < 75 ? '正常' : '热'}
                         </div>
                     </div>
                 </div>
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Memory Usage</span>
+                        <span class="metric-label">内存使用率</span>
                     </div>
                     <div class="metric-value-large" id="mem-${gpuId}">${formatMemory(gpuInfo.memory_used)}</div>
-                    <div class="metric-sublabel" id="mem-total-${gpuId}">of ${formatMemory(gpuInfo.memory_total)}</div>
+                    <div class="metric-sublabel" id="mem-total-${gpuId}">共 ${formatMemory(gpuInfo.memory_total)}</div>
                     <div class="progress-bar">
                         <div class="progress-fill mem-bar" id="mem-bar-${gpuId}" style="width: ${memPercent}%"></div>
                     </div>
@@ -170,10 +176,10 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Power Draw</span>
+                        <span class="metric-label">功率消耗</span>
                     </div>
                     <div class="metric-value-large" id="power-${gpuId}">${gpuInfo.power_draw.toFixed(1)}W</div>
-                    <div class="metric-sublabel" id="power-limit-${gpuId}">of ${gpuInfo.power_limit.toFixed(0)}W</div>
+                    <div class="metric-sublabel" id="power-limit-${gpuId}">共 ${gpuInfo.power_limit.toFixed(0)}W</div>
                     <div class="progress-bar">
                         <div class="progress-fill power-bar" id="power-bar-${gpuId}" style="width: ${powerPercent}%"></div>
                     </div>
@@ -181,15 +187,14 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Graphics Clock</span>
+                        <span class="metric-label">图形时钟</span>
                     </div>
                     <div class="metric-value-large" id="clock-gr-${gpuId}">${gpuInfo.clock_graphics || 0}</div>
                     <div class="metric-sublabel">MHz</div>
-                </div>
-
+                </div}
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Memory Clock</span>
+                        <span class="metric-label">内存时钟</span>
                     </div>
                     <div class="metric-value-large" id="clock-mem-${gpuId}">${gpuInfo.clock_memory || 0}</div>
                     <div class="metric-sublabel">MHz</div>
@@ -208,33 +213,31 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">PCIe Link</span>
+                        <span class="metric-label">PCIe 链接</span>
                     </div>
                     <div class="metric-value-large" id="pcie-${gpuId}">Gen ${gpuInfo.pcie_gen || 'N/A'}</div>
-                    <div class="metric-sublabel">x${gpuInfo.pcie_width || 'N/A'} lanes</div>
-                </div>
-
+                    <div class="metric-sublabel">x${gpuInfo.pcie_width || 'N/A'} 条通道</div>
+                </div}
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Performance State</span>
+                        <span class="metric-label">性能状态</span>
                     </div>
                     <div class="metric-value-large" id="pstate-${gpuId}">${gpuInfo.performance_state || 'N/A'}</div>
-                    <div class="metric-sublabel">Power Mode</div>
-                </div>
-
+                    <div class="metric-sublabel">电源模式</div>
+                </div}
                 ${hasMetric(gpuInfo, 'encoder_sessions') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Encoder Sessions</span>
+                        <span class="metric-label">编码器会话</span>
                     </div>
                     <div class="metric-value-large" id="encoder-${gpuId}">${gpuInfo.encoder_sessions}</div>
-                    <div class="metric-sublabel">${(gpuInfo.encoder_fps || 0).toFixed(1)} FPS avg</div>
+                    <div class="metric-sublabel">${(gpuInfo.encoder_fps || 0).toFixed(1)} 平均FPS </div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'clock_sm') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">SM Clock</span>
+                        <span class="metric-label">SM 时钟</span>
                     </div>
                     <div class="metric-value-large" id="clock-sm-${gpuId}">${gpuInfo.clock_sm}</div>
                     <div class="metric-sublabel">MHz${gpuInfo.clock_sm_max ? ` / ${gpuInfo.clock_sm_max} Max` : ''}</div>
@@ -243,19 +246,19 @@ function createGPUCard(gpuId, gpuInfo) {
                 ${hasMetric(gpuInfo, 'temperature_memory') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Memory Temp</span>
+                        <span class="metric-label">内存温度</span>
                     </div>
                     <div class="metric-value-large" id="temp-mem-${gpuId}">${gpuInfo.temperature_memory}°C</div>
-                    <div class="metric-sublabel">VRAM Temperature</div>
+                    <div class="metric-sublabel">VRAM 温度</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'memory_free') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Free Memory</span>
+                        <span class="metric-label">可用内存</span>
                     </div>
                     <div class="metric-value-large" id="mem-free-${gpuId}">${formatMemory(gpuInfo.memory_free)}</div>
-                    <div class="metric-sublabel">Available VRAM</div>
+                    <div class="metric-sublabel">可用 VRAM</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'decoder_sessions') ? `
@@ -279,78 +282,78 @@ function createGPUCard(gpuId, gpuInfo) {
                 ${hasMetric(gpuInfo, 'compute_mode') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Compute Mode</span>
+                        <span class="metric-label">计算模式</span>
                     </div>
                     <div class="metric-value-large" id="compute-mode-${gpuId}" style="font-size: 1.5rem;">${gpuInfo.compute_mode}</div>
-                    <div class="metric-sublabel">Execution Mode</div>
+                    <div class="metric-sublabel">执行模式</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'pcie_gen_max') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Max PCIe</span>
+                        <span class="metric-label">最大 PCIe</span>
                     </div>
                     <div class="metric-value-large" id="pcie-max-${gpuId}">Gen ${gpuInfo.pcie_gen_max}</div>
-                    <div class="metric-sublabel">x${gpuInfo.pcie_width_max || 'N/A'} Max</div>
+                    <div class="metric-sublabel">x${gpuInfo.pcie_width_max || 'N/A'} 最大</div>
                 </div>` : ''}
 
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Throttle Status</span>
+                        <span class="metric-label">节流状态</span>
                     </div>
                     <div class="metric-value-large" id="throttle-${gpuId}" style="font-size: 1.2rem;">${gpuInfo.throttle_reasons === 'Active' || gpuInfo.throttle_reasons !== 'None' ? 'Active' : 'None'}</div>
-                    <div class="metric-sublabel">Performance</div>
+                    <div class="metric-sublabel">性能</div>
                 </div>
 
                 ${hasMetric(gpuInfo, 'energy_consumption_wh') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Total Energy</span>
+                        <span class="metric-label">总能量</span>
                     </div>
                     <div class="metric-value-large" id="energy-${gpuId}">${formatEnergy(gpuInfo.energy_consumption_wh)}</div>
-                    <div class="metric-sublabel">Since driver load</div>
+                    <div class="metric-sublabel">自驱动加载以来</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'brand') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Brand / Architecture</span>
+                        <span class="metric-label">品牌 / 架构</span>
                     </div>
                     <div class="metric-value-large" id="brand-${gpuId}" style="font-size: 1.3rem;">${gpuInfo.brand}</div>
-                    <div class="metric-sublabel">${gpuInfo.architecture || 'Unknown'}</div>
+                    <div class="metric-sublabel">${gpuInfo.architecture || '未知'}</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'power_limit_min') && hasMetric(gpuInfo, 'power_limit_max') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Power Range</span>
+                        <span class="metric-label">功率范围</span>
                     </div>
                     <div class="metric-value-large" id="power-range-${gpuId}" style="font-size: 1.3rem;">${gpuInfo.power_limit_min.toFixed(0)}W - ${gpuInfo.power_limit_max.toFixed(0)}W</div>
-                    <div class="metric-sublabel">Min / Max Limit</div>
+                    <div class="metric-sublabel">最小 / 最大限制</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'clock_graphics_app') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Target Graphics Clock</span>
+                        <span class="metric-label">目标图形时钟</span>
                     </div>
                     <div class="metric-value-large" id="clock-gr-app-${gpuId}">${gpuInfo.clock_graphics_app}</div>
-                    <div class="metric-sublabel">MHz${gpuInfo.clock_graphics_default ? ` / ${gpuInfo.clock_graphics_default} Default` : ''}</div>
+                    <div class="metric-sublabel">MHz${gpuInfo.clock_graphics_default ? ` / ${gpuInfo.clock_graphics_default} 默认` : ''}</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'clock_memory_app') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Target Memory Clock</span>
+                        <span class="metric-label">目标内存时钟</span>
                     </div>
                     <div class="metric-value-large" id="clock-mem-app-${gpuId}">${gpuInfo.clock_memory_app}</div>
-                    <div class="metric-sublabel">MHz${gpuInfo.clock_memory_default ? ` / ${gpuInfo.clock_memory_default} Default` : ''}</div>
+                    <div class="metric-sublabel">MHz${gpuInfo.clock_memory_default ? ` / ${gpuInfo.clock_memory_default} 默认` : ''}</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'pcie_rx_throughput') || hasMetric(gpuInfo, 'pcie_tx_throughput') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">PCIe Throughput</span>
+                        <span class="metric-label">PCIe 吞吐量</span>
                     </div>
                     <div class="metric-value-large" id="pcie-throughput-${gpuId}" style="font-size: 1.3rem;">↓${(gpuInfo.pcie_rx_throughput || 0).toFixed(0)} KB/s</div>
                     <div class="metric-sublabel">↑${(gpuInfo.pcie_tx_throughput || 0).toFixed(0)} KB/s</div>
@@ -359,46 +362,46 @@ function createGPUCard(gpuId, gpuInfo) {
                 ${hasMetric(gpuInfo, 'bar1_memory_used') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">BAR1 Memory</span>
+                        <span class="metric-label">BAR1 内存</span>
                     </div>
                     <div class="metric-value-large" id="bar1-mem-${gpuId}">${formatMemory(gpuInfo.bar1_memory_used)}</div>
-                    <div class="metric-sublabel">of ${formatMemory(gpuInfo.bar1_memory_total || 0)}</div>
+                    <div class="metric-sublabel">共 ${formatMemory(gpuInfo.bar1_memory_total || 0)}</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'persistence_mode') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Persistence Mode</span>
+                        <span class="metric-label">持久模式</span>
                     </div>
                     <div class="metric-value-large" id="persistence-${gpuId}" style="font-size: 1.3rem;">${gpuInfo.persistence_mode}</div>
-                    <div class="metric-sublabel">${gpuInfo.display_active ? 'Display Active' : 'Headless'}</div>
+                    <div class="metric-sublabel">${gpuInfo.display_active ? '显示活动' : '无头'}</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'reset_required') || hasMetric(gpuInfo, 'multi_gpu_board') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">GPU Status</span>
+                        <span class="metric-label">GPU 状态</span>
                     </div>
-                    <div class="metric-value-large" id="reset-required-${gpuId}" style="font-size: 1.3rem; color: ${gpuInfo.reset_required ? '#ff4444' : '#00ff88'};">${gpuInfo.reset_required ? 'Reset Required!' : 'Healthy'}</div>
-                    <div class="metric-sublabel">${gpuInfo.multi_gpu_board ? 'Multi-GPU Board' : 'Single GPU'}</div>
+                    <div class="metric-value-large" id="reset-required-${gpuId}" style="font-size: 1.3rem; color: ${gpuInfo.reset_required ? '#ff4444' : '#00ff88'};">${gpuInfo.reset_required ? '需要重置!' : '健康'}</div>
+                    <div class="metric-sublabel">${gpuInfo.multi_gpu_board ? '多GPU' : '单GPU'}</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'nvlink_active_count') && gpuInfo.nvlink_active_count > 0 ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">NVLink Status</span>
+                        <span class="metric-label">NVLink 状态</span>
                     </div>
                     <div class="metric-value-large" id="nvlink-${gpuId}">${gpuInfo.nvlink_active_count}</div>
-                    <div class="metric-sublabel">Active Links</div>
+                    <div class="metric-sublabel">活动链接</div>
                 </div>` : ''}
 
                 ${hasMetric(gpuInfo, 'compute_processes_count') || hasMetric(gpuInfo, 'graphics_processes_count') ? `
                 <div class="metric-card">
                     <div class="metric-header">
-                        <span class="metric-label">Process Counts</span>
+                        <span class="metric-label">进程计数</span>
                     </div>
                     <div class="metric-value-large" id="process-counts-${gpuId}" style="font-size: 1.3rem;">C:${gpuInfo.compute_processes_count || 0} G:${gpuInfo.graphics_processes_count || 0}</div>
-                    <div class="metric-sublabel">Compute / Graphics</div>
+                    <div class="metric-sublabel">计算 / 图形</div>
                 </div>` : ''}
             </div>
 
@@ -408,19 +411,19 @@ function createGPUCard(gpuId, gpuInfo) {
                         <div class="chart-title">Utilization</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current</span>
+                                <span class="chart-stat-label">当前</span>
                                 <span class="chart-stat-value current" id="stat-utilization-current-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Min</span>
+                                <span class="chart-stat-label">最小</span>
                                 <span class="chart-stat-value min" id="stat-utilization-min-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max</span>
+                                <span class="chart-stat-label">最大</span>
                                 <span class="chart-stat-value max" id="stat-utilization-max-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Avg</span>
+                                <span class="chart-stat-label">平均</span>
                                 <span class="chart-stat-value avg" id="stat-utilization-avg-${gpuId}">0%</span>
                             </div>
                         </div>
@@ -430,22 +433,22 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="chart-container">
                     <div class="chart-header" data-value="0°C">
-                        <div class="chart-title">Temperature</div>
+                        <div class="chart-title">温度</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current</span>
+                                <span class="chart-stat-label">当前</span>
                                 <span class="chart-stat-value current" id="stat-temperature-current-${gpuId}">0°C</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Min</span>
+                                <span class="chart-stat-label">最小</span>
                                 <span class="chart-stat-value min" id="stat-temperature-min-${gpuId}">0°C</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max</span>
+                                <span class="chart-stat-label">最大</span>
                                 <span class="chart-stat-value max" id="stat-temperature-max-${gpuId}">0°C</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Avg</span>
+                                <span class="chart-stat-label">平均</span>
                                 <span class="chart-stat-value avg" id="stat-temperature-avg-${gpuId}">0°C</span>
                             </div>
                         </div>
@@ -455,22 +458,22 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="chart-container">
                     <div class="chart-header" data-value="0%">
-                        <div class="chart-title">Memory</div>
+                        <div class="chart-title">内存</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current</span>
+                                <span class="chart-stat-label">当前</span>
                                 <span class="chart-stat-value current" id="stat-memory-current-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Min</span>
+                                <span class="chart-stat-label">最小</span>
                                 <span class="chart-stat-value min" id="stat-memory-min-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max</span>
+                                <span class="chart-stat-label">最大</span>
                                 <span class="chart-stat-value max" id="stat-memory-max-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Avg</span>
+                                <span class="chart-stat-label">平均</span>
                                 <span class="chart-stat-value avg" id="stat-memory-avg-${gpuId}">0%</span>
                             </div>
                         </div>
@@ -483,19 +486,19 @@ function createGPUCard(gpuId, gpuInfo) {
                         <div class="chart-title">Power</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current</span>
+                                <span class="chart-stat-label">当前</span>
                                 <span class="chart-stat-value current" id="stat-power-current-${gpuId}">0W</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Min</span>
+                                <span class="chart-stat-label">最小</span>
                                 <span class="chart-stat-value min" id="stat-power-min-${gpuId}">0W</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max</span>
+                                <span class="chart-stat-label">最大</span>
                                 <span class="chart-stat-value max" id="stat-power-max-${gpuId}">0W</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Avg</span>
+                                <span class="chart-stat-label">平均</span>
                                 <span class="chart-stat-value avg" id="stat-power-avg-${gpuId}">0W</span>
                             </div>
                         </div>
@@ -505,22 +508,22 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="chart-container">
                     <div class="chart-header" data-value="0%">
-                        <div class="chart-title">Fan Speed</div>
+                        <div class="chart-title">风扇速度</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current</span>
+                                <span class="chart-stat-label">当前</span>
                                 <span class="chart-stat-value current" id="stat-fanSpeed-current-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Min</span>
+                                <span class="chart-stat-label">最小</span>
                                 <span class="chart-stat-value min" id="stat-fanSpeed-min-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max</span>
+                                <span class="chart-stat-label">最大</span>
                                 <span class="chart-stat-value max" id="stat-fanSpeed-max-${gpuId}">0%</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Avg</span>
+                                <span class="chart-stat-label">平均</span>
                                 <span class="chart-stat-value avg" id="stat-fanSpeed-avg-${gpuId}">0%</span>
                             </div>
                         </div>
@@ -530,22 +533,22 @@ function createGPUCard(gpuId, gpuInfo) {
 
                 <div class="chart-container">
                     <div class="chart-header" data-value="0 MHz">
-                        <div class="chart-title">Clocks</div>
+                        <div class="chart-title">时钟</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current</span>
+                                <span class="chart-stat-label">当前</span>
                                 <span class="chart-stat-value current" id="stat-clocks-current-${gpuId}">0 MHz</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Min</span>
+                                <span class="chart-stat-label">最小</span>
                                 <span class="chart-stat-value min" id="stat-clocks-min-${gpuId}">0 MHz</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max</span>
+                                <span class="chart-stat-label">最大</span>
                                 <span class="chart-stat-value max" id="stat-clocks-max-${gpuId}">0 MHz</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Avg</span>
+                                <span class="chart-stat-label">平均</span>
                                 <span class="chart-stat-value avg" id="stat-clocks-avg-${gpuId}">0 MHz</span>
                             </div>
                         </div>
@@ -558,19 +561,19 @@ function createGPUCard(gpuId, gpuInfo) {
                         <div class="chart-title">Efficiency</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current</span>
+                                <span class="chart-stat-label">当前</span>
                                 <span class="chart-stat-value current" id="stat-efficiency-current-${gpuId}">0 %/W</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Min</span>
+                                <span class="chart-stat-label">最小</span>
                                 <span class="chart-stat-value min" id="stat-efficiency-min-${gpuId}">0 %/W</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max</span>
+                                <span class="chart-stat-label">最大</span>
                                 <span class="chart-stat-value max" id="stat-efficiency-max-${gpuId}">0 %/W</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Avg</span>
+                                <span class="chart-stat-label">平均</span>
                                 <span class="chart-stat-value avg" id="stat-efficiency-avg-${gpuId}">0 %/W</span>
                             </div>
                         </div>
@@ -585,19 +588,19 @@ function createGPUCard(gpuId, gpuInfo) {
                         <div class="chart-title">PCIe</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current RX</span>
+                                <span class="chart-stat-label">当前 RX</span>
                                 <span class="chart-stat-value current" id="stat-pcie-rx-current-${gpuId}">0 KB/s</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Current TX</span>
+                                <span class="chart-stat-label">当前 TX</span>
                                 <span class="chart-stat-value current" id="stat-pcie-tx-current-${gpuId}">0 KB/s</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max RX</span>
+                                <span class="chart-stat-label">最大 RX</span>
                                 <span class="chart-stat-value max" id="stat-pcie-rx-max-${gpuId}">0 KB/s</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Max TX</span>
+                                <span class="chart-stat-label">最大 TX</span>
                                 <span class="chart-stat-value max" id="stat-pcie-tx-max-${gpuId}">0 KB/s</span>
                             </div>
                         </div>
@@ -608,14 +611,14 @@ function createGPUCard(gpuId, gpuInfo) {
                 ${hasMetric(gpuInfo, 'clock_graphics_app') || hasMetric(gpuInfo, 'clock_memory_app') ? `
                 <div class="chart-container">
                     <div class="chart-header" data-value="0 MHz">
-                        <div class="chart-title">App Clocks</div>
+                        <div class="chart-title">应用时钟</div>
                         <div class="chart-stats">
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Graphics</span>
+                                <span class="chart-stat-label">图形</span>
                                 <span class="chart-stat-value current" id="stat-app-clock-gr-${gpuId}">0 MHz</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Memory</span>
+                                <span class="chart-stat-label">内存</span>
                                 <span class="chart-stat-value current" id="stat-app-clock-mem-${gpuId}">0 MHz</span>
                             </div>
                             <div class="chart-stat">
@@ -623,7 +626,7 @@ function createGPUCard(gpuId, gpuInfo) {
                                 <span class="chart-stat-value current" id="stat-app-clock-sm-${gpuId}">0 MHz</span>
                             </div>
                             <div class="chart-stat">
-                                <span class="chart-stat-label">Video</span>
+                                <span class="chart-stat-label">视频</span>
                                 <span class="chart-stat-value current" id="stat-app-clock-video-${gpuId}">0 MHz</span>
                             </div>
                         </div>
@@ -636,6 +639,7 @@ function createGPUCard(gpuId, gpuInfo) {
 }
 
 // Helper function to format memory values
+// 帮助函数格式化内存值 (MB 转 GB 当适用)
 function formatMemory(mb) {
     if (mb >= 1024) {
         return `${(mb / 1024).toFixed(1)}GB`;
@@ -644,6 +648,7 @@ function formatMemory(mb) {
 }
 
 // Helper function to format energy values (Wh to kWh when appropriate)
+// 帮助函数格式化能量值 (Wh 转 kWh 当适用)
 function formatEnergy(wh) {
     if (wh >= 1000) {
         return `${(wh / 1000).toFixed(2)}kWh`;
@@ -652,19 +657,23 @@ function formatEnergy(wh) {
 }
 
 // Helper function to safely get metric value with default
+// 帮助函数安全获取指标值，带默认值
 function getMetricValue(gpuInfo, key, defaultValue = 0) {
     return (key in gpuInfo && gpuInfo[key] !== null && gpuInfo[key] !== undefined) ? gpuInfo[key] : defaultValue;
 }
 
 // Helper function to check if a metric is available (not null, undefined, or 'N/A')
+// 帮助函数检查指标是否可用（非 null、undefined 或 'N/A'）
 function hasMetric(gpuInfo, key) {
     const value = gpuInfo[key];
     return value !== null && value !== undefined && value !== 'N/A' && value !== 'Unknown' && value !== '';
 }
 
 // Helper function to create metric card HTML (returns empty string if not available)
+// 帮助函数创建指标卡片 HTML（如果不可用则返回空字符串）
 function createMetricCard(label, valueId, value, sublabel, gpuId, options = {}) {
     // Don't create card if value is not available and hideIfEmpty is true
+    // 如果值不可用且 hideIfEmpty 为真，则不创建卡片
     if (options.hideIfEmpty && (!value || value === 'N/A' || value === 0 || value === '0')) {
         return '';
     }
@@ -688,8 +697,10 @@ function createMetricCard(label, valueId, value, sublabel, gpuId, options = {}) 
 }
 
 // Update GPU display
+// 更新 GPU 显示
 function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
     // Extract metric values
+    // 提取指标值
     const utilization = getMetricValue(gpuInfo, 'utilization', 0);
     const temperature = getMetricValue(gpuInfo, 'temperature', 0);
     const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
@@ -699,8 +710,10 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
     const fan_speed = getMetricValue(gpuInfo, 'fan_speed', 0);
 
     // Only update DOM text elements if throttle allows (reduce DOM thrashing during scroll)
+    // 仅当节流允许时更新 DOM 文本元素（减少滚动时的 DOM 抖动）
     if (shouldUpdateDOM) {
         // Update metric values
+        // 更新指标值
         const utilEl = document.getElementById(`util-${gpuId}`);
         const tempEl = document.getElementById(`temp-${gpuId}`);
         const memEl = document.getElementById(`mem-${gpuId}`);
@@ -714,6 +727,7 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
         if (fanEl) fanEl.textContent = `${fan_speed}%`;
 
         // Update temperature status
+        // 更新温度状态
         const tempStatus = document.getElementById(`temp-status-${gpuId}`);
         if (tempStatus) {
             if (temperature < 60) {
@@ -725,7 +739,7 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
             }
         }
 
-        // Update circular gauge
+        // 更新圆形仪表盘
         const utilRing = document.getElementById(`util-ring-${gpuId}`);
         const utilText = document.getElementById(`util-text-${gpuId}`);
         if (utilRing) {
@@ -734,7 +748,7 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
         }
         if (utilText) utilText.textContent = `${utilization}%`;
 
-        // Update progress bars
+        // 更新进度条
         const utilBar = document.getElementById(`util-bar-${gpuId}`);
         const memBar = document.getElementById(`mem-bar-${gpuId}`);
         const powerBar = document.getElementById(`power-bar-${gpuId}`);
@@ -746,7 +760,7 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
         if (memBar) memBar.style.width = `${memPercent}%`;
         if (powerBar) powerBar.style.width = `${powerPercent}%`;
 
-        // Update new metrics (only if they exist)
+        // 更新新指标（仅当存在时）
         const clockGrEl = document.getElementById(`clock-gr-${gpuId}`);
         const clockMemEl = document.getElementById(`clock-mem-${gpuId}`);
         const clockSmEl = document.getElementById(`clock-sm-${gpuId}`);
@@ -765,17 +779,17 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
         if (pstateEl) pstateEl.textContent = `${getMetricValue(gpuInfo, 'performance_state', 'N/A')}`;
         if (encoderEl) encoderEl.textContent = `${getMetricValue(gpuInfo, 'encoder_sessions', 0)}`;
 
-        // Update header badges
+        // 更新头部徽章
         const pstateHeaderEl = document.getElementById(`pstate-header-${gpuId}`);
         const pcieHeaderEl = document.getElementById(`pcie-header-${gpuId}`);
         if (pstateHeaderEl) pstateHeaderEl.textContent = `${getMetricValue(gpuInfo, 'performance_state', 'N/A')}`;
         if (pcieHeaderEl) pcieHeaderEl.textContent = `${getMetricValue(gpuInfo, 'pcie_gen', 'N/A')}`;
 
-        // Update memory total sublabel
+        // 更新内存总量子标签
         const memTotalEl = document.getElementById(`mem-total-${gpuId}`);
         if (memTotalEl) memTotalEl.textContent = `of ${formatMemory(memory_total)}`;
 
-        // Update new advanced metrics (only if present)
+        // 更新新高级指标（仅当存在时）
         const tempMemEl = document.getElementById(`temp-mem-${gpuId}`);
         const memFreeEl = document.getElementById(`mem-free-${gpuId}`);
         const decoderEl = document.getElementById(`decoder-${gpuId}`);
@@ -817,7 +831,7 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
             throttleEl.textContent = isThrottling ? throttle_reasons : 'None';
         }
 
-        // Update all new metrics (only if elements exist - dynamic dashboard)
+        // 更新所有新指标（仅当元素存在 - 动态仪表盘）
         if (hasMetric(gpuInfo, 'energy_consumption_wh')) {
             const energyEl = document.getElementById(`energy-${gpuId}`);
             if (energyEl) energyEl.textContent = formatEnergy(gpuInfo.energy_consumption_wh);
@@ -883,9 +897,10 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
                 processCountsEl.textContent = `C:${compute} G:${graphics}`;
             }
         }
-    } // End of shouldUpdateDOM block
+    }
+    // 结束 shouldUpdateDOM 检查
 
-    // ALWAYS update charts (they're efficient and need high-frequency data)
+    // 始终更新图表（它们高效且需要高频数据）
     const memPercent = (memory_used / memory_total) * 100;
 
     // Update charts with available data
@@ -900,11 +915,11 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
         getMetricValue(gpuInfo, 'clock_memory', 0)
     );
     
-    // Calculate and update power efficiency (utilization per watt)
+    // 计算并更新功率效率（每瓦特利用率）
     const efficiency = power_draw > 0 ? utilization / power_draw : 0;
     updateChart(gpuId, 'efficiency', efficiency);
     
-    // Update new charts (only if metrics are available)
+    // 更新新图表（仅当指标可用时）
     if (hasMetric(gpuInfo, 'pcie_rx_throughput') || hasMetric(gpuInfo, 'pcie_tx_throughput')) {
         updateChart(gpuId, 'pcie',
             gpuInfo.pcie_rx_throughput || 0,
@@ -921,18 +936,18 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
         );
     }
 
-    // Update background utilization chart
+    // 更新背景利用率图表
     if (charts[gpuId] && charts[gpuId].utilBackground) {
         charts[gpuId].utilBackground.update('none');
     }
 }
 
-// Update processes display
+// 更新进程显示
 function updateProcesses(processes) {
     const container = document.getElementById('processes-container');
     const countEl = document.getElementById('process-count');
 
-    // Update count
+    // 更新进程计数
     if (countEl) {
         countEl.textContent = processes.length === 0 ? 'No processes' :
                              processes.length === 1 ? '1 process' :
