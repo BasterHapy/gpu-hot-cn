@@ -1,13 +1,15 @@
 /**
  * Chart configuration factory - DRY approach for chart configs
+ * 图表配置工厂 - 图表配置的 DRY 方法
  */
 
 // Base chart options shared across all charts
+// 所有图表共享的基本图表选项
 function getBaseChartOptions() {
     return {
         responsive: true,
         maintainAspectRatio: false,
-        animation: false, // Disable all animations globally
+        animation: false, // 全局禁用所有动画
         interaction: {
             intersect: false,
             mode: 'index'
@@ -70,6 +72,7 @@ function getBaseChartOptions() {
 }
 
 // Create a line chart configuration
+// 创建折线图配置
 function createLineChartConfig(options) {
     const {
         label,
@@ -79,7 +82,7 @@ function createLineChartConfig(options) {
         yStepSize,
         yUnit,
         tooltipTitle,
-        tooltipLabel,  // Optional: custom label for tooltip (defaults to dataset label)
+        tooltipLabel,  // 可选：工具提示的自定义标签（默认为数据集标签）
         tooltipAfterLabel,
         thresholds = []
     } = options;
@@ -101,7 +104,7 @@ function createLineChartConfig(options) {
         borderJoinStyle: 'round'
     }];
 
-    // Add threshold lines
+    // 添加阈值线
     thresholds.forEach(threshold => {
         datasets.push({
             label: threshold.label,
@@ -124,7 +127,7 @@ function createLineChartConfig(options) {
         options: getBaseChartOptions()
     };
 
-    // Customize Y axis
+    // 自定义 Y 轴
     if (yMax !== undefined) config.options.scales.y.max = yMax;
     if (yMax === undefined && options.ySuggestedMax) config.options.scales.y.suggestedMax = options.ySuggestedMax;
     if (yStepSize) config.options.scales.y.ticks.stepSize = yStepSize;
@@ -134,7 +137,7 @@ function createLineChartConfig(options) {
         };
     }
 
-    // Customize tooltip
+    // 自定义工具提示
     config.options.plugins.tooltip.borderColor = borderColor;
     config.options.plugins.tooltip.callbacks = {
         title: function(context) {
@@ -161,7 +164,7 @@ function createLineChartConfig(options) {
     return config;
 }
 
-// Create multi-line chart (for clocks, pcie, etc)
+// 创建多折线图（用于时钟、PCIe 等）
 function createMultiLineChartConfig(options) {
     const {
         datasets,
@@ -196,7 +199,7 @@ function createMultiLineChartConfig(options) {
         options: getBaseChartOptions()
     };
 
-    // Y axis customization
+    // 自定义 Y 轴
     if (ySuggestedMax) config.options.scales.y.suggestedMax = ySuggestedMax;
     if (yUnit) {
         config.options.scales.y.ticks.callback = function(value) {
@@ -204,7 +207,7 @@ function createMultiLineChartConfig(options) {
         };
     }
 
-    // Legend
+    // 图例
     if (showLegend) {
         config.options.plugins.legend.display = true;
         config.options.plugins.legend.position = 'top';
@@ -219,7 +222,7 @@ function createMultiLineChartConfig(options) {
         };
     }
 
-    // Tooltip
+    // 工具提示
     config.options.plugins.tooltip.borderColor = datasets[0].color;
     config.options.plugins.tooltip.callbacks = {
         title: function(context) {
@@ -235,7 +238,7 @@ function createMultiLineChartConfig(options) {
     return config;
 }
 
-// Chart configurations using factory functions
+// 图表配置使用工厂函数
 const chartConfigs = {
     utilization: createLineChartConfig({
         label: 'GPU Utilization',
@@ -303,7 +306,7 @@ const chartConfigs = {
         yStepSize: 50,
         yUnit: ' W',
         tooltipTitle: 'Power Draw',
-        tooltipLabel: 'Power',  // Shortened label for tooltip
+        tooltipLabel: 'Power',  // 工具提示的简短标签
         tooltipAfterLabel: (value) => {
             if (value > 200) return '⚡ Maximum Performance';
             if (value > 150) return '🔥 High Performance';
@@ -348,7 +351,7 @@ const chartConfigs = {
         backgroundColor: 'rgba(251, 191, 36, 0.15)',
         yUnit: ' %/W',
         tooltipTitle: 'Power Efficiency',
-        tooltipLabel: 'Efficiency',  // Shortened label for tooltip
+        tooltipLabel: 'Efficiency',  // 工具提示的简短标签
         decimals: 2,
         tooltipAfterLabel: (value) => {
             if (value > 0.8) return '⭐ Excellent';
