@@ -16,7 +16,4 @@ document.addEventListener('DOMContentLoaded', function() {
     // - socket-handlers.js: 通过Socket.IO进行实时数据更新
     
     // 当socket-handlers.js加载时，套接字连接会自动建立
-    
-    // 检查版本更新
-    checkVersion();
 });
