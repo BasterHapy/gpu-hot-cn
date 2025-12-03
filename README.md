@@ -105,7 +105,7 @@ socket.on('gpu_data', (data) => {
 
 ```bash
 gpu-hot/
-├── app.py                      # Flask + WebSocket 服务器
+├── app.py                      # FastAPI + WebSocket 服务器
 ├── core/
 │   ├── config.py               # 配置
 │   ├── monitor.py              # NVML GPU 监控
