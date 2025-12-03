@@ -2,7 +2,7 @@
 
 # GPU Hot
 
-Real-time NVIDIA GPU monitoring dashboard. Web-based, no SSH required.
+实时 NVIDIA GPU 监控仪表盘。基于 Web，无需 SSH。
 
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -14,70 +14,72 @@ Real-time NVIDIA GPU monitoring dashboard. Web-based, no SSH required.
 </div>
 
 ---
+## 声明
+[gpu-hot](https://github.com/psalias2006/gpu-hot)项目的中文分支
 
-## Usage
+## 使用方法
 
-Monitor a single machine or an entire cluster with the same Docker image.
+使用相同的 Docker 镜像可监控单机或整个集群。
 
-**Single machine:**
+**单机：**
 ```bash
 docker run -d --gpus all -p 1312:1312 ghcr.io/psalias2006/gpu-hot:latest
 ```
 
-**Multiple machines:**
+**多机：**
 ```bash
-# On each GPU server
+# 在每台 GPU 服务器上运行
 docker run -d --gpus all -p 1312:1312 -e NODE_NAME=$(hostname) ghcr.io/psalias2006/gpu-hot:latest
 
-# On a hub machine (no GPU required)
+# 在一个不需要 GPU 的汇聚机器上运行
 docker run -d -p 1312:1312 -e GPU_HOT_MODE=hub -e NODE_URLS=http://server1:1312,http://server2:1312,http://server3:1312 ghcr.io/psalias2006/gpu-hot:latest
 ```
 
-Open `http://localhost:1312`
+打开 `http://localhost:1312`
 
-**Older GPUs:** Add `-e NVIDIA_SMI=true` if metrics don't appear.
+**旧款 GPU：** 如果指标未显示，请添加 `-e NVIDIA_SMI=true`。
 
-**Process monitoring:** Add `--init --pid=host` to see process names. Note: This allows the container to access host process information.
+**进程监控：** 添加 `--init --pid=host` 可查看进程名称。注意：这会允许容器访问宿主机进程信息。
 
-**From source:**
+**从源码运行：**
 ```bash
 git clone https://github.com/psalias2006/gpu-hot
 cd gpu-hot
 docker-compose up --build
 ```
 
-**Requirements:** Docker + [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+**依赖要求：** Docker + [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
 ---
 
-## Features
+## 功能
 
-- Real-time metrics (sub-second)
-- Automatic multi-GPU detection
-- Process monitoring (PID, memory usage)
-- Historical charts (utilization, temperature, power, clocks)
-- System metrics (CPU, RAM)
-- Scale from 1 to 100+ GPUs
+- 实时指标（亚秒级）
+- 自动多 GPU 检测
+- 进程监控（PID、内存占用）
+- 历史图表（利用率、温度、功耗、频率）
+- 系统指标（CPU、内存）
+- 可扩展至 1 到 100+ GPUs
 
-**Metrics:** Utilization, temperature, memory, power draw, fan speed, clock speeds, PCIe info, P-State, throttle status, encoder/decoder sessions
+**采集指标：** 利用率、温度、显存、功耗、风扇转速、频率、PCIe 信息、P-State、节流状态、编码/解码会话
 
 ---
 
-## Configuration
+## 配置
 
-**Environment variables:**
+**环境变量：**
 ```bash
-NVIDIA_VISIBLE_DEVICES=0,1     # Specific GPUs (default: all)
-NVIDIA_SMI=true                # Force nvidia-smi mode for older GPUs
-GPU_HOT_MODE=hub               # Set to 'hub' for multi-node aggregation (default: single node)
-NODE_NAME=gpu-server-1         # Node display name (default: hostname)
-NODE_URLS=http://host:1312...  # Comma-separated node URLs (required for hub mode)
+NVIDIA_VISIBLE_DEVICES=0,1     # 指定的 GPU（默认：全部）
+NVIDIA_SMI=true                # 为旧 GPU 强制使用 nvidia-smi 模式
+GPU_HOT_MODE=hub               # 设置为 'hub' 以启用多节点聚合（默认：单节点）
+NODE_NAME=gpu-server-1         # 节点显示名称（默认：hostname）
+NODE_URLS=http://host:1312...  # 以逗号分隔的节点 URL（hub 模式下必填）
 ```
 
-**Backend (`core/config.py`):**
+**后端（core/config.py）：**
 ```python
-UPDATE_INTERVAL = 0.5  # Polling interval
-PORT = 1312            # Server port
+UPDATE_INTERVAL = 0.5  # 轮询间隔
+PORT = 1312            # 服务器端口
 ```
 
 ---
@@ -86,39 +88,39 @@ PORT = 1312            # Server port
 
 ### HTTP
 ```bash
-GET /              # Dashboard
-GET /api/gpu-data  # JSON metrics
+GET /              # 仪表盘
+GET /api/gpu-data  # JSON 格式的指标数据
 ```
 
 ### WebSocket
 ```javascript
 socket.on('gpu_data', (data) => {
-  // Updates every 0.5s (configurable)
-  // Contains: data.gpus, data.processes, data.system
+  // 每 0.5s 更新（可配置）
+  // 包含: data.gpus, data.processes, data.system
 });
 ```
 ---
 
-## Project Structure
+## 项目结构
 
 ```bash
 gpu-hot/
-├── app.py                      # Flask + WebSocket server
+├── app.py                      # Flask + WebSocket 服务器
 ├── core/
-│   ├── config.py               # Configuration
-│   ├── monitor.py              # NVML GPU monitoring
-│   ├── handlers.py             # WebSocket handlers
-│   ├── routes.py               # HTTP routes
+│   ├── config.py               # 配置
+│   ├── monitor.py              # NVML GPU 监控
+│   ├── handlers.py             # WebSocket 处理器
+│   ├── routes.py               # HTTP 路由
 │   └── metrics/
-│       ├── collector.py        # Metrics collection
-│       └── utils.py            # Metric utilities
+│       ├── collector.py        # 指标采集
+│       └── utils.py            # 指标实用工具
 ├── static/
 │   ├── js/
-│   │   ├── charts.js           # Chart configs
-│   │   ├── gpu-cards.js        # UI components
-│   │   ├── socket-handlers.js  # WebSocket + rendering
-│   │   ├── ui.js               # View management
-│   │   └── app.js              # Init
+│   │   ├── charts.js           # 图表配置
+│   │   ├── gpu-cards.js        # UI 组件
+│   │   ├── socket-handlers.js  # WebSocket 与渲染
+│   │   ├── ui.js               # 视图管理
+│   │   └── app.js              # 初始化
 │   └── css/styles.css
 ├── templates/index.html
 ├── Dockerfile
@@ -127,32 +129,33 @@ gpu-hot/
 
 ---
 
-## Troubleshooting
+## 故障排查
 
-**No GPUs detected:**
+**未检测到 GPU：**
 ```bash
-nvidia-smi  # Verify drivers work
-docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi  # Test Docker GPU access
+nvidia-smi  # 检查驱动是否正常
+docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi  # 测试 Docker 的 GPU 访问
 ```
 
-**Hub can't connect to nodes:**
+**Hub 无法连接节点：**
 ```bash
-curl http://node-ip:1312/api/gpu-data  # Test connectivity
-sudo ufw allow 1312/tcp                # Check firewall
+curl http://node-ip:1312/api/gpu-data  # 测试连通性
+sudo ufw allow 1312/tcp                # 检查防火墙
 ```
 
-**Performance issues:** Increase `UPDATE_INTERVAL` in `core/config.py`
+**性能问题：** 增大 core/config.py 中的 UPDATE_INTERVAL
 
 ---
 
-## Star History
+## Star 历史
 
 [![Star History Chart](https://api.star-history.com/svg?repos=psalias2006/gpu-hot&type=date&legend=top-left)](https://www.star-history.com/#psalias2006/gpu-hot&type=date&legend=top-left)
 
-## Contributing
+## 贡献
 
-PRs welcome. Open an issue for major changes.
+欢迎 PR。对重大变更请先打开 issue。
 
-## License
+## 许可证
 
-MIT - see [LICENSE](LICENSE)
+MIT - 参见 [LICENSE](LICENSE)
+
